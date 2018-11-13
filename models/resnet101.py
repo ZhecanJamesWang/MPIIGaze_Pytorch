@@ -94,7 +94,7 @@ class Bottleneck(nn.Module):
 
 class Model(nn.Module):
 
-    def __init__(self, block, layers, num_classes=1000):
+    def __init__(self, num_classes=1000):
 
         block = Bottleneck
         layers = [3, 4, 23, 3]
