@@ -18,7 +18,7 @@ import torch.backends.cudnn
 import torchvision.utils
 import cv2
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+# os.environ["CUDA_VISIBLE_DEVICES"]="0"
 # os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 
