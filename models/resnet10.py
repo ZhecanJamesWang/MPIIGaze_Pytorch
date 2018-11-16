@@ -52,7 +52,8 @@ class Model(nn.Module):
         self.layer_512_1_conv2 = self.__conv(2, name='layer_512_1_conv2', in_channels=512, out_channels=512,
                                              kernel_size=(3, 3), stride=(1, 1), groups=1, bias=False)
         self.last_bn = self.__batch_normalization(2, 'last_bn', num_features=512, eps=9.99999974738e-06, momentum=0.0)
-        self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
+        # self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
+        self.score_1 = self.__dense(name='score_1', in_features=512, out_features=256, bias=True)
 
 
 
