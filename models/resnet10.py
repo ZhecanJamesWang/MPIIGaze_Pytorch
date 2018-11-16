@@ -156,7 +156,8 @@ class Model(nn.Module):
     def __dense(self, name, **kwargs):
         print "loading: ", name
         layer = nn.Linear(**kwargs)
-        layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
+        if name in self.__weights_dict:
+            layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
         if 'bias' in self.__weights_dict[name]:
             layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
         return layer
