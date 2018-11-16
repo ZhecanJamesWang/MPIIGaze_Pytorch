@@ -154,9 +154,10 @@ class Model(nn.Module):
 
     # @staticmethod
     def __dense(self, name, **kwargs):
-        print "loading: ", name
+        print "intializing dense layer: ", name
         layer = nn.Linear(**kwargs)
         if name in self.__weights_dict:
+            print "successfully loading weights for : ", name
             layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
             if 'bias' in self.__weights_dict[name]:
                 layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
