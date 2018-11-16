@@ -7,8 +7,8 @@ import torch.nn.functional as F
 class Model(nn.Module):
     def __init__(self, weight_file):
         super(Model, self).__init__()
-        global __weights_dict
-        __weights_dict = np.load(weight_file, encoding='bytes').item()
+        # global __weights_dict
+        self.__weights_dict = np.load(weight_file, encoding='bytes').item()
 
 
         self.data_bn = self.__batch_normalization(2, 'data_bn', num_features=3, eps=9.99999974738e-06, momentum=0.0)
@@ -154,4 +154,3 @@ class Model(nn.Module):
 
 if __name__ == '__main__':
     Model("resnet10_weights.npy")
-    
