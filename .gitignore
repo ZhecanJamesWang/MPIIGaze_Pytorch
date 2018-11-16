@@ -17,6 +17,7 @@ MPIIGaze/
 *.dat
 *.pyc
 *.npz
+*.npy
 *.pth
 *.json
 *.m
