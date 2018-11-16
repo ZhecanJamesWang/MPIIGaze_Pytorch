@@ -52,8 +52,10 @@ class Model(nn.Module):
         self.layer_512_1_conv2 = self.__conv(2, name='layer_512_1_conv2', in_channels=512, out_channels=512,
                                              kernel_size=(3, 3), stride=(1, 1), groups=1, bias=False)
         self.last_bn = self.__batch_normalization(2, 'last_bn', num_features=512, eps=9.99999974738e-06, momentum=0.0)
-        # self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
-        self.score_1 = self.__dense(name='score_1', in_features=512, out_features=256, bias=True)
+        self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
+        self.fc1 = self.__dense(name='fc1', in_features=512, out_features=256, bias=True)
+        self.fc2 = self.__dense(name='fc2', in_features=258, out_features=128, bias=True)
+        self.fc3 = self.__dense(name='fc3', in_features=128, out_features=2, bias=True)
 
 
 
@@ -107,9 +109,15 @@ class Model(nn.Module):
         last_relu = F.relu(last_bn)
         global_pool = F.avg_pool2d(last_relu, kernel_size=(7, 7), stride=(1, 1), padding=(0,), ceil_mode=False)
         score_0 = global_pool.view(global_pool.size(0), -1)
-        score_1 = self.score_1(score_0)
-        prob = F.softmax(score_1)
-        return prob
+        # score_1 = self.score_1(score_0)
+        # prob = F.softmax(score_1)
+        # return prob
+        x = self.fc1(score_0)
+        x = torch.cat([x, y], dim=1)
+        x = self.fc2(x)
+        x = self.fc3(x)
+        x = self.fc4(x)
+
 
     # @staticmethod
     def __batch_normalization(self, dim, name, **kwargs):
