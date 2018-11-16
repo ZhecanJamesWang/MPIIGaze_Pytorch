@@ -3,6 +3,72 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def weight_init(m):
+    '''
+    Usage:
+        model = Model()
+        model.apply(weight_init)
+    '''
+    if isinstance(m, nn.Conv1d):
+        init.normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.Conv2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.Conv3d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose1d):
+        init.normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose3d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.BatchNorm1d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.BatchNorm2d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.BatchNorm3d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.Linear):
+        init.xavier_normal_(m.weight.data)
+        init.normal_(m.bias.data)
+    elif isinstance(m, nn.LSTM):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.LSTMCell):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.GRU):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
+    elif isinstance(m, nn.GRUCell):
+        for param in m.parameters():
+            if len(param.shape) >= 2:
+                init.orthogonal_(param.data)
+            else:
+                init.normal_(param.data)
 
 class Model(nn.Module):
     def __init__(self, weight_file):
@@ -56,9 +122,6 @@ class Model(nn.Module):
         self.fc1 = self.__dense(name='fc1', in_features=512, out_features=256, bias=True)
         self.fc2 = self.__dense(name='fc2', in_features=258, out_features=128, bias=True)
         self.fc3 = self.__dense(name='fc3', in_features=128, out_features=2, bias=True)
-
-
-
 
     def forward(self, x):
         data_bn = self.data_bn(x)
@@ -152,17 +215,25 @@ class Model(nn.Module):
             layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
         return layer
 
+        if m.bias:
+            torch.nn.init.xavier_uniform_(m.bias)
     # @staticmethod
     def __dense(self, name, **kwargs):
         print "intializing dense layer: ", name
         layer = nn.Linear(**kwargs)
+
         if name in self.__weights_dict:
             print "successfully loading weights for : ", name
             layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
             if 'bias' in self.__weights_dict[name]:
                 layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
-            return layer
+        else:
+            stdv = 1. / math.sqrt(layer.state_dict()['weight'].size(1))
+            layer.state_dict()['weight'].data.uniform_(-stdv, stdv)
+            if layer.state_dict()['bias'] is not None:
+                layer.state_dict()['bias'].uniform_(-stdv, stdv)
 
+        return layer
 
 if __name__ == '__main__':
     Model("resnet10_weights.npy")
