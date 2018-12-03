@@ -128,12 +128,16 @@ def convert_to_unit_vector(angles):
     return x, y, z
 
 
-def compute_angle_error(preds, labels):
-    pred_x, pred_y, pred_z = convert_to_unit_vector(preds)
-    label_x, label_y, label_z = convert_to_unit_vector(labels)
-    angles = pred_x * label_x + pred_y * label_y + pred_z * label_z
-    return torch.acos(angles) * 180 / np.pi
+# def compute_angle_error(preds, labels):
+#     pred_x, pred_y, pred_z = convert_to_unit_vector(preds)
+#     label_x, label_y, label_z = convert_to_unit_vector(labels)
+#     angles = pred_x * label_x + pred_y * label_y + pred_z * label_z
+#     return torch.acos(angles) * 180 / np.pi
 
+def compute_angle_error(preds, labels):
+    err = torch.abs(preds - labels).mean()
+
+    return err * 180 / np.pi
 
 def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_gaze = True):
     global global_step
@@ -163,9 +167,15 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
         poses = poses.cuda()
         gazes = gazes.cuda()
 
+        # poses = poses.float()
+        # gazes = gazes.float()
+
         optimizer.zero_grad()
 
         outputs = model(images, poses)
+
+        # outputs = outputs.float()
+
         loss = criterion(outputs, gazes)
         loss.backward()
 
@@ -173,7 +183,8 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
 
         angle_error = compute_angle_error(outputs, gazes).mean()
 
-        num = images.size(0)
+        # num = images.size(0)
+        num = 1
         loss_meter.update(loss.item(), num)
         angle_error_meter.update(angle_error.item(), num)
 
@@ -181,7 +192,7 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
             writer.add_scalar('Train/RunningLoss', loss_meter.val, global_step)
 
 
-        if step % 100 == 0:
+        if step % 10 == 0:
             logger.info('Epoch {} Step {}/{} '
                         'Loss {:.4f} ({:.4f}) '
                         'AngleError {:.2f} ({:.2f})'.format(
@@ -256,12 +267,15 @@ def test(epoch, model, criterion, test_loader, config, writer):
             # cv2.destroyAllWindows()
 
         # raise "debug"
+        # gazes = gazes.float()
+        # outputs = outputs.float()
 
         loss = criterion(outputs, gazes)
 
         angle_error = compute_angle_error(outputs, gazes).mean()
 
-        num = images.size(0)
+        # num = images.size(0)
+        num = 1
         loss_meter.update(loss.item(), num)
         angle_error_meter.update(angle_error.item(), num)
 
@@ -283,6 +297,37 @@ def test(epoch, model, criterion, test_loader, config, writer):
 
     return angle_error_meter.avg
 
+def plot_gaze_pose(center_pt, gaze, pose, image):
+
+    [cx, cy] = center_pt
+    [left_yaw, left_pitch] = gaze
+    [head_yaw, head_pitch] = pose
+    increase = 30
+
+    # y_x, y_y = - np.sin(left_yaw), - np.sin(left_pitch)
+    y_x, y_y = - np.sin(head_yaw * np.pi/180), np.sin(head_pitch * np.pi/180)
+    # y_x, y_y = left_eye_vector_unit
+    print image
+
+    print "cx, cy: ", cx, cy
+    print "y_x, y_y: ", y_x, y_y
+
+    y_x, y_y = int(y_x * increase), -int(y_y * increase)
+    # print (px, py)
+
+    print image.shape
+    cv2.imwrite('test.png', image)
+    image = cv2.imread('test.png')
+    print image.shape
+
+    cv2.circle(image, (int(cx), int(cy)), 5, (0, 0, 255), -1)
+    cv2.line(image, (int(cx), int(cy)), (int(cx + y_x), int(cy + y_y)), (255, 0, 0), 3)
+
+    cv2.imshow("eye", image)
+    # cv2.imshow("right_eye", right_eye)
+    # cv2.imshow("left_eye", left_eye)
+    cv2.waitKey(0)
+    # raise "debug"
 
 def main():
     args = parse_args()
@@ -312,14 +357,45 @@ def main():
     #
     # for step, (images, poses, gazes) in enumerate(train_loader):
     #     print ("images.shape: ", images.shape)
+    #     for index in range(len(images)):
+    #
+    #         image = np.asarray(images[index]).astype(np.uint8).copy()
+    #
+    #         # image = np.ascontiguousarray(image, dtype = np.uint8)
+    #         # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #         gaze = np.asarray(gazes[index])
+    #         pose = np.asarray(poses[index])
+    #
+    #         image = image.transpose(1, 2, 0)
+    #
+    #         height, width, channels = image.shape
+    #         cy, cx = height/2, width/2
+    #
+    #         print image.shape
+    #         print type(image)
+    #
+    #         print "gaze: ", gaze
+    #         print "pose: ", pose
+    #
+    #         # cv2.imshow("image", image)
+    #         # cv2.waitKey(0)
+    #
+    #         plot_gaze_pose([cx, cy], gaze, pose, image)
+    #
     #     raise ("debug")
 
     # model
     module = importlib.import_module('models.{}'.format(args.arch))
     model = module.Model()
+
+    # weights = "models/resnet10_weights.npy"
+    # print "loading: ", weights
+    # model = module.Model(weights)
+
     model.cuda()
 
-    criterion = nn.MSELoss(size_average=True)
+    # criterion = nn.MSELoss(size_average=True)
+    criterion = nn.SmoothL1Loss(size_average=True)
 
     # optimizer
     optimizer = torch.optim.SGD(

@@ -15,6 +15,7 @@ class Model(nn.Module):
 
     def __init__(self, num_classes=1000):
         super(Model, self).__init__()
+        self.relu = nn.ReLU(inplace=True)
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
             nn.ReLU(inplace=True),
@@ -40,19 +41,41 @@ class Model(nn.Module):
             nn.Linear(4096, num_classes),
         )
 
-        # self.load_state_dict(model_zoo.load_url(model_urls['alexnet']))
+        self.load_state_dict(model_zoo.load_url(model_urls['alexnet']))
 
-        self.fc1 = nn.Linear(num_classes + 2, 502)
-        self.fc2 = nn.Linear(502, 2)
+        self.fc1 = nn.Linear(num_classes + 2, 2)
+        # self.fc1 = nn.Linear(num_classes, 2)
 
+
+        # self.fc1 = nn.Linear(num_classes + 2, 502)
+        # self.fc2 = nn.Linear(502, 2)
+
+    # def forward(self, x, y):
+    #     # x = x.float()
+    #     # y = y.float()
+    #
+    #     x = self.features(x)
+    #     x = x.view(x.size(0), 256 * 6 * 6)
+    #     x = self.classifier(x)
+    #     # x = torch.cat([x, y], dim=1)
+    #
+    #     x = self.relu(x)
+    #     x = self.fc1(x)
+    #     # x = self.fc2(x)
+    #     return x
 
     def forward(self, x, y):
+        # x = x.float()
+        # y = y.float()
+
         x = self.features(x)
         x = x.view(x.size(0), 256 * 6 * 6)
         x = self.classifier(x)
         x = torch.cat([x, y], dim=1)
+
+        x = self.relu(x)
         x = self.fc1(x)
-        x = self.fc2(x)
+        # x = self.fc2(x)
         return x
 
 

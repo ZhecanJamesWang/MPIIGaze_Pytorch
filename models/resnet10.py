@@ -3,80 +3,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-
-
-def weight_init(m):
-    '''
-    Usage:
-        model = Model()
-        model.apply(weight_init)
-    '''
-    if isinstance(m, nn.Conv1d):
-        init.normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.Conv2d):
-        init.xavier_normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.Conv3d):
-        init.xavier_normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.ConvTranspose1d):
-        init.normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.ConvTranspose2d):
-        init.xavier_normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.ConvTranspose3d):
-        init.xavier_normal_(m.weight.data)
-        if m.bias is not None:
-            init.normal_(m.bias.data)
-    elif isinstance(m, nn.BatchNorm1d):
-        init.normal_(m.weight.data, mean=1, std=0.02)
-        init.constant_(m.bias.data, 0)
-    elif isinstance(m, nn.BatchNorm2d):
-        init.normal_(m.weight.data, mean=1, std=0.02)
-        init.constant_(m.bias.data, 0)
-    elif isinstance(m, nn.BatchNorm3d):
-        init.normal_(m.weight.data, mean=1, std=0.02)
-        init.constant_(m.bias.data, 0)
-    elif isinstance(m, nn.Linear):
-        init.xavier_normal_(m.weight.data)
-        init.normal_(m.bias.data)
-    elif isinstance(m, nn.LSTM):
-        for param in m.parameters():
-            if len(param.shape) >= 2:
-                init.orthogonal_(param.data)
-            else:
-                init.normal_(param.data)
-    elif isinstance(m, nn.LSTMCell):
-        for param in m.parameters():
-            if len(param.shape) >= 2:
-                init.orthogonal_(param.data)
-            else:
-                init.normal_(param.data)
-    elif isinstance(m, nn.GRU):
-        for param in m.parameters():
-            if len(param.shape) >= 2:
-                init.orthogonal_(param.data)
-            else:
-                init.normal_(param.data)
-    elif isinstance(m, nn.GRUCell):
-        for param in m.parameters():
-            if len(param.shape) >= 2:
-                init.orthogonal_(param.data)
-            else:
-                init.normal_(param.data)
+import torch.nn.init as init
 
 class Model(nn.Module):
-    def __init__(self, weight_file):
+    def __init__(self, weight_file = None):
         super(Model, self).__init__()
         # global __weights_dict
-        self.__weights_dict = np.load(weight_file, encoding='bytes').item()
+        if weight_file:
+            self.__weights_dict = np.load(weight_file, encoding='bytes').item()
+        else:
+            self.__weights_dict = {}
 
 
         self.data_bn = self.__batch_normalization(2, 'data_bn', num_features=3, eps=9.99999974738e-06, momentum=0.0)
@@ -120,12 +56,16 @@ class Model(nn.Module):
         self.layer_512_1_conv2 = self.__conv(2, name='layer_512_1_conv2', in_channels=512, out_channels=512,
                                              kernel_size=(3, 3), stride=(1, 1), groups=1, bias=False)
         self.last_bn = self.__batch_normalization(2, 'last_bn', num_features=512, eps=9.99999974738e-06, momentum=0.0)
-        self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
-        self.fc1 = self.__dense(name='fc1', in_features=512, out_features=256, bias=True)
-        self.fc2 = self.__dense(name='fc2', in_features=258, out_features=128, bias=True)
-        self.fc3 = self.__dense(name='fc3', in_features=128, out_features=2, bias=True)
+        # self.score_1 = self.__dense(name='score_1', in_features=512, out_features=1000, bias=True)
+        self.fc1 = self.__dense(name='fc1', in_features=2048, out_features=1024, bias=True)
+        self.fc2 = self.__dense(name='fc2', in_features=1026, out_features=512, bias=True)
+        self.fc3 = self.__dense(name='fc3', in_features=512, out_features=256, bias=True)
+        self.fc4 = self.__dense(name='fc4', in_features=256, out_features=128, bias=True)
+        self.fc5 = self.__dense(name='fc5', in_features=128, out_features=2, bias=True)
 
-    def forward(self, x):
+
+
+    def forward(self, x, y):
         data_bn = self.data_bn(x)
         conv1_pad = F.pad(data_bn, (3, 3, 3, 3))
         conv1 = self.conv1(conv1_pad)
@@ -172,16 +112,25 @@ class Model(nn.Module):
         layer_512_1_sum = layer_512_1_conv2 + layer_512_1_conv_expand
         last_bn = self.last_bn(layer_512_1_sum)
         last_relu = F.relu(last_bn)
+        # print "last_relu.shape: ", last_relu.shape
+
         global_pool = F.avg_pool2d(last_relu, kernel_size=(7, 7), stride=(1, 1), padding=(0,), ceil_mode=False)
+
+        # print "global_pool.shape: ", global_pool.shape
+
         score_0 = global_pool.view(global_pool.size(0), -1)
         # score_1 = self.score_1(score_0)
         # prob = F.softmax(score_1)
         # return prob
+        # print "score_0.shape: ", score_0.shape
         x = self.fc1(score_0)
         x = torch.cat([x, y], dim=1)
         x = self.fc2(x)
         x = self.fc3(x)
         x = self.fc4(x)
+        x = self.fc5(x)
+
+        return x
 
 
     # @staticmethod
@@ -191,30 +140,48 @@ class Model(nn.Module):
         elif dim == 3:  layer = nn.BatchNorm3d(**kwargs)
         else:           raise NotImplementedError()
 
-        if 'scale' in self.__weights_dict[name]:
-            layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['scale']))
+        if len(self.__weights_dict) != 0:
+            if 'scale' in self.__weights_dict[name]:
+                layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['scale']))
         else:
             layer.weight.data.fill_(1)
 
-        if 'bias' in self.__weights_dict[name]:
-            layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
+        if len(self.__weights_dict) != 0:
+            if 'bias' in self.__weights_dict[name]:
+                layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
+            layer.state_dict()['running_mean'].copy_(torch.from_numpy(self.__weights_dict[name]['mean']))
+            layer.state_dict()['running_var'].copy_(torch.from_numpy(self.__weights_dict[name]['var']))
         else:
             layer.bias.data.fill_(0)
 
-        layer.state_dict()['running_mean'].copy_(torch.from_numpy(self.__weights_dict[name]['mean']))
-        layer.state_dict()['running_var'].copy_(torch.from_numpy(self.__weights_dict[name]['var']))
         return layer
 
     # @staticmethod
     def __conv(self, dim, name, **kwargs):
-        if   dim == 1:  layer = nn.Conv1d(**kwargs)
-        elif dim == 2:  layer = nn.Conv2d(**kwargs)
-        elif dim == 3:  layer = nn.Conv3d(**kwargs)
-        else:           raise NotImplementedError()
 
-        layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
-        if 'bias' in self.__weights_dict[name]:
-            layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
+        if   dim == 1:
+            layer = nn.Conv1d(**kwargs)
+            if len(self.__weights_dict) == 0:
+                init.normal_(layer.state_dict()['weight'].data)
+        elif dim == 2:
+            layer = nn.Conv2d(**kwargs)
+            if len(self.__weights_dict) == 0:
+                init.xavier_normal_(layer.state_dict()['weight'].data)
+        elif dim == 3:
+            layer = nn.Conv3d(**kwargs)
+            if len(self.__weights_dict) == 0:
+                init.xavier_normal_(layer.state_dict()['weight'].data)
+        else:
+            raise NotImplementedError()
+
+        if name in self.__weights_dict:
+            layer.state_dict()['weight'].copy_(torch.from_numpy(self.__weights_dict[name]['weights']))
+
+        if len(self.__weights_dict) != 0:
+            if 'bias' in self.__weights_dict[name]:
+                layer.state_dict()['bias'].copy_(torch.from_numpy(self.__weights_dict[name]['bias']))
+        # else:
+        #     init.normal_(layer.state_dict()['bias'].data)
         return layer
 
         if m.bias:

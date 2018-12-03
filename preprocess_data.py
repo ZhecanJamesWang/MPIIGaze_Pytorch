@@ -249,6 +249,7 @@ def main():
 							   'sample list for eye image')
 
 		images, poses, gazes = get_subject_data(subject_id, datadir, evaldir)
+
 		# left_images, left_poses, left_gazes, right_images, right_poses, right_gazes = get_subject_data(subject_id, datadir, evaldir)
 
 		# left_images_total.extend(left_images)
