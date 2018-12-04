@@ -11,9 +11,9 @@ class MPIIGazeDataset(torch.utils.data.Dataset):
     def __init__(self, subject_id, dataset_dir):
         path = os.path.join(dataset_dir, '{}.npz'.format(subject_id))
 
-        print "---------------------------------------"
-        print "loading: ", path
-        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+        print ("---------------------------------------")
+        print ("loading: ", path)
+        print ("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 
         with np.load(path) as fin:
             self.images = fin['image'].astype(np.float32)
@@ -58,8 +58,10 @@ def get_loader(dataset_dir, test_subject_id, batch_size, num_workers, use_gpu):
     # ])
     # test_dataset = MPIIGazeDataset(test_subject_id, dataset_dir)
 
-    train_dataset = MPIIGazeDataset("train_A", dataset_dir)
-    test_dataset = MPIIGazeDataset("test_A", dataset_dir)
+    # train_dataset = MPIIGazeDataset("train_A", dataset_dir)
+    # test_dataset = MPIIGazeDataset("test_A", dataset_dir)
+    train_dataset = MPIIGazeDataset("train", dataset_dir)
+    test_dataset = MPIIGazeDataset("test", dataset_dir)
 
 
     # assert len(train_dataset) == 42000

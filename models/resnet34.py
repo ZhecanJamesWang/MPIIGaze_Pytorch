@@ -113,10 +113,12 @@ class Model(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
+        self.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
 
-        self.fc1 = nn.Linear(num_classes + 2, 500)
-        self.fc2 = nn.Linear(500, 100)
-        self.fc3 = nn.Linear(100, 2)
+        self.fc1 = nn.Linear(num_classes + 2, 2)
+        # self.fc1 = nn.Linear(num_classes + 2, 500)
+        # self.fc2 = nn.Linear(500, 100)
+        # self.fc3 = nn.Linear(100, 2)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -156,9 +158,10 @@ class Model(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         x = torch.cat([x, y], dim=1)
+        x = self.relu(x)
         x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        # x = self.fc2(x)
+        # x = self.fc3(x)
         return x
 
 

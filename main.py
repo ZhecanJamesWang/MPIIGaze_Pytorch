@@ -20,6 +20,9 @@ import cv2
 
 # os.environ["CUDA_VISIBLE_DEVICES"]="0"
 # os.environ["CUDA_VISIBLE_DEVICES"]="1"
+# os.environ["CUDA_VISIBLE_DEVICES"]="2"
+# os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_VISIBLE_DEVICES"]="4"
 
 
 try:
@@ -238,37 +241,9 @@ def test(epoch, model, criterion, test_loader, config, writer):
         with torch.no_grad():
             outputs = model(images, poses)
 
-        # print ("insdie test function")
-        # print (images.shape)
-        # print (poses.shape)
-        # print (outputs.shape)
-
-        # img = cv2.imread('messi5.jpg',0)
-
-        # for im in images:
-        #     im = np.array(images[0], dtype = np.uint8)
-        #     # _, w, h = im.shape
-        #     # im.reshape(w, h)
-        #     im = np.squeeze(im, axis=0)
-        #     print ("im.shape")
-        #     print (im.shape)
-        #
-        #     threshed = cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 3, 0)
-        #
-        #     print ("threshed.shape")
-        #     print (threshed.shape)
-        #
-        #     h, w = im.shape
-        #     x = 10
-        #     threshed = cv2.resize(threshed, (w * x, h * x))
-
-            # cv2.imshow('image', threshed)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-
-        # raise "debug"
-        # gazes = gazes.float()
-        # outputs = outputs.float()
+        for index in range(len(images)):
+            image = images[index]
+            cv2.imshow("image", image)
 
         loss = criterion(outputs, gazes)
 
@@ -307,18 +282,18 @@ def plot_gaze_pose(center_pt, gaze, pose, image):
     # y_x, y_y = - np.sin(left_yaw), - np.sin(left_pitch)
     y_x, y_y = - np.sin(head_yaw * np.pi/180), np.sin(head_pitch * np.pi/180)
     # y_x, y_y = left_eye_vector_unit
-    print image
+    print (image)
 
-    print "cx, cy: ", cx, cy
-    print "y_x, y_y: ", y_x, y_y
+    print ("cx, cy: ", cx, cy)
+    print ("y_x, y_y: ", y_x, y_y)
 
     y_x, y_y = int(y_x * increase), -int(y_y * increase)
     # print (px, py)
 
-    print image.shape
+    print (image.shape)
     cv2.imwrite('test.png', image)
     image = cv2.imread('test.png')
-    print image.shape
+    print (image.shape)
 
     cv2.circle(image, (int(cx), int(cy)), 5, (0, 0, 255), -1)
     cv2.line(image, (int(cx), int(cy)), (int(cx + y_x), int(cy + y_y)), (255, 0, 0), 3)
@@ -394,8 +369,8 @@ def main():
 
     model.cuda()
 
-    # criterion = nn.MSELoss(size_average=True)
-    criterion = nn.SmoothL1Loss(size_average=True)
+    criterion = nn.MSELoss(size_average=True)
+    # criterion = nn.SmoothL1Loss(size_average=True)
 
     # optimizer
     optimizer = torch.optim.SGD(
