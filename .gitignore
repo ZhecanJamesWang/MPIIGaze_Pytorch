@@ -8,6 +8,7 @@ SavedModel/
 records/
 data_normalization_code/
 MPIIGaze/
+results/
 .idea/
 
 *.DS_Store
