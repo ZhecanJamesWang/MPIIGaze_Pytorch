@@ -9,6 +9,8 @@ import logging
 import argparse
 import numpy as np
 import random
+import cv2
+import datetime
 
 import torch
 import torch.nn as nn
@@ -16,24 +18,18 @@ import torch.optim
 import torch.utils.data
 import torch.backends.cudnn
 import torchvision.utils
-import cv2
 
-# os.environ["CUDA_VISIBLE_DEVICES"]="0"
-# os.environ["CUDA_VISIBLE_DEVICES"]="1"
-# os.environ["CUDA_VISIBLE_DEVICES"]="2"
-# os.environ["CUDA_VISIBLE_DEVICES"]="3"
-os.environ["CUDA_VISIBLE_DEVICES"]="4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-
-try:
-    from tensorboardX import SummaryWriter
-    is_tensorboard_available = True
-except Exception:
-    is_tensorboard_available = False
+# try:
+from tensorboardX import SummaryWriter
+is_tensorboard_available = True
+# except Exception:
+#     is_tensorboard_available = False
 
 from dataloader import get_loader
 
-torch.backends.cudnn.benchmark = False
+# torch.backends.cudnn.benchmark = False
 
 logging.basicConfig(
     format='[%(asctime)s %(name)s %(levelname)s] - %(message)s',
@@ -42,6 +38,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 global_step = 0
+
+now = datetime.datetime.now()
+date = now.strftime("%Y-%m-%d-%H-%M")
+
+record_file_name = date + '_record.txt'
+records = ""
+records_count = 0
 
 
 def str2bool(s):
@@ -52,14 +55,15 @@ def str2bool(s):
     else:
         raise RuntimeError('Boolean value expected')
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--arch', type=str, required=True, choices=['lenet', 'resnet_preact', 'alexnet', 'resnet101', 'resnet34', 'resnet18', 'resnet10'])
-    parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--test_id', type=int, required=True)
-    parser.add_argument('--outdir', type=str, required=True)
+        '--arch', type=str, choices=['lenet', 'resnet_preact', 'alexnet', 'resnet101', 'resnet34',
+                                                    'resnet18', 'resnet10', 'resnet18_gh_exp_1', "resnet34_gh_exp_1",
+                                                    "resnet34_gh_exp_2", "resnet34_gh_exp_3", 'resnet34_classifier'])
+    parser.add_argument('--dataset', type=str)
+    parser.add_argument('--test_id', type=int)
+    parser.add_argument('--outdir', type=str)
     parser.add_argument('--seed', type=int, default=17)
     parser.add_argument('--num_workers', type=int, default=7)
 
@@ -81,16 +85,77 @@ def parse_args():
     parser.add_argument('--tensorboard_images', action='store_true')
     parser.add_argument('--tensorboard_parameters', action='store_true')
 
-    args = parser.parse_args()
-    if not is_tensorboard_available:
-        args.tensorboard = False
-        args.tensorboard_images = False
-        args.tensorboard_parameters = False
+    parser.add_argument('--pretrained_path', type=str, default = "")
+    parser.add_argument('--gpu', type=str)
 
-    assert os.path.exists(args.dataset)
+    args = parser.parse_args()
+    # if not is_tensorboard_available:
+    #     args.tensorboard = False
+    #     args.tensorboard_images = False
+    #     args.tensorboard_parameters = False
+
+    args.tensorboard = True
+    args.tensorboard_images = True
+    args.tensorboard_parameters = True
+
+    # assert os.path.exists(args.dataset)
     args.milestones = json.loads(args.milestones)
 
     return args
+
+args = parse_args()
+
+args.arch = "resnet34"
+# args.arch = "resnet18_trimmed_2"
+
+# dataset = "1221_2018_train_4_camera"
+# dataset = "1226_2018_test_4_camera_hog"
+# dataset = "1228_2018_train_4_camera_hog_64"
+# dataset = "0102_2019_train_4_camera_hog"
+dataset = "0107_2019_4_camera_head_face_11.07_12.06_train"
+
+args.dataset = "./"
+args.test_id = 0
+args.outdir = "second_test_data_" + args.arch + "_pretrained_0.01_relu_l2_batch64_no_shuffle_" + dataset
+args.batch_size = 64
+args.base_lr = 0.001
+args.momentum = 0.9
+args.nesterov = True
+args.weight_decay = 1e-4
+args.epochs = 1000
+args.lr_decay = 0.1
+args.gpu = torch.cuda.current_device()
+#
+# os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu.strip()
+
+print ("print (torch.cuda.current_device()): ", torch.cuda.current_device())
+
+args.outdir = "results/" + date + "_" + args.outdir
+
+
+def write_to_file(file_name, content):
+
+	fh = open(file_name, "a")
+	fh.write(content)
+	fh.close
+
+	content = ""
+	return content
+
+
+def save_to_record(content):
+    global records
+    global records_count
+
+    # print(content)
+    records += content
+    records_count += 1
+
+    file_name = args.outdir + "/" + record_file_name
+
+    if records_count % 20 == 0:
+        write_to_file(file_name, records)
+        records = ""
 
 
 class AverageMeter(object):
@@ -142,42 +207,55 @@ def compute_angle_error(preds, labels):
 
     return err * 180 / np.pi
 
-def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_gaze = True):
+def train(epoch, model, optimizer, criterion, train_loader, config, writer):
     global global_step
 
     logger.info('Train {}'.format(epoch))
+    save_to_record('Train {}'.format(epoch) + "\n")
 
     model.train()
 
-    # if if_gaze:
     loss_meter = AverageMeter()
     angle_error_meter = AverageMeter()
     start = time.time()
-    for step, (images, poses, gazes) in enumerate(train_loader):
+    # gaze_features = []
+    # head_features = []
+    # gazes_list = []
+    # image_list = []
+
+    # for step, (images, poses, gazes) in enumerate(train_loader):
+    # for step, (images, gazes) in enumerate(train_loader):
+    for step, (images, gazes, heads) in enumerate(train_loader):
+    # for step, (images, gazes, heads, faces) in enumerate(train_loader):
         global_step += 1
 
-        # print ("before scale")
-        # print (images.shape)
+        # if config['tensorboard_images'] and step == 0:
+        #     image = torchvision.utils.make_grid(
+        #         images, normalize=True, scale_each=True)
+        #     writer.add_image('Train/Image', image, epoch)
 
-        if config['tensorboard_images'] and step == 0:
-            image = torchvision.utils.make_grid(
-                images, normalize=True, scale_each=True)
-            writer.add_image('Train/Image', image, epoch)
 
-        # print ("after scale")
-        # print (images.shape)
         images = images.cuda()
-        poses = poses.cuda()
         gazes = gazes.cuda()
-
-        # poses = poses.float()
-        # gazes = gazes.float()
+        heads = heads.cuda()
 
         optimizer.zero_grad()
 
-        outputs = model(images, poses)
+        # outputs = model(images)
+        outputs = model(images, heads)
 
-        # outputs = outputs.float()
+        # print("outputs.shape: ", outputs.shape)
+        # print("heads.shape: ", heads.shape)
+
+        # images = images.detach().cpu().numpy()
+        # gazes = gazes.detach().cpu().numpy()
+        # gaze_feature = outputs.detach().cpu().numpy()
+        # head_feature = heads.detach().cpu().numpy()
+        #
+        # image_list.extend(images)
+        # gazes_list.extend(gazes)
+        # gaze_features.extend(gaze_feature)
+        # head_features.extend(head_feature)
 
         loss = criterion(outputs, gazes)
         loss.backward()
@@ -196,6 +274,7 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
 
 
         if step % 10 == 0:
+
             logger.info('Epoch {} Step {}/{} '
                         'Loss {:.4f} ({:.4f}) '
                         'AngleError {:.2f} ({:.2f})'.format(
@@ -207,9 +286,41 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
                             angle_error_meter.val,
                             angle_error_meter.avg,
                         ))
+            save_to_record('Epoch {} Step {}/{} '
+                        'Loss {:.4f} ({:.4f}) '
+                        'AngleError {:.2f} ({:.2f})'.format(
+                            epoch,
+                            step,
+                            len(train_loader),
+                            loss_meter.val,
+                            loss_meter.avg,
+                            angle_error_meter.val,
+                            angle_error_meter.avg,
+                        ) + "\n")
+        if step % 10 == 0:
+            logger.info(json.dumps(vars(args), indent=2))
+
+    # image_list = np.asarray(image_list)
+    # gaze_list = np.asarray(gazes_list)
+    # gaze_features = np.asarray(gaze_features)
+    # head_features = np.asarray(head_features)
+    #
+    # print("image_list.shape: ", image_list.shape)
+    # print("gaze_list.shape: ", gaze_list.shape)
+    # print("gaze_features.shape: ", gaze_features.shape)
+    # print("head_features.shape: ", head_features.shape)
+    #
+    # np.savez("gh_exp_features", image_list=image_list, gaze_list=gaze_list, gaze_features=gaze_features, head_features=head_features)
+    #
+    # raise("debug")
 
     elapsed = time.time() - start
     logger.info('Elapsed {:.2f}'.format(elapsed))
+    save_to_record('Elapsed {:.2f}'.format(elapsed) + "\n")
+
+    outdir = args.outdir
+    model_path = os.path.join(outdir, 'model_state.pth')
+    torch.save(model.state_dict(), model_path)
 
     if config['tensorboard']:
         writer.add_scalar('Train/Loss', loss_meter.avg, epoch)
@@ -217,33 +328,94 @@ def train(epoch, model, optimizer, criterion, train_loader, config, writer, if_g
         writer.add_scalar('Train/Time', elapsed, epoch)
 
 
+def inference(test_loader, model):
+# save output ////////////////////////////////////
+
+    outputs_list = []
+    gazes_list = []
+    gestures_list = []
+
+    for step, (images, gazes) in enumerate(test_loader):
+    # for step, (images, gazes, heads) in enumerate(test_loader):
+    # for step, (images, gazes, gestures) in enumerate(test_loader):
+
+        # if config['tensorboard_images'] and epoch == 0 and step == 0:
+        #     image = torchvision.utils.make_grid(
+        #         images, normalize=True, scale_each=True)
+        #     writer.add_image('Test/Image', image, epoch)
+
+        images = images.cuda()
+        # poses = poses.cuda()
+        gazes = gazes.cuda()
+        # heads = heads.cuda()
+        gestures = gestures.cuda()
+
+        with torch.no_grad():
+            # outputs = model(images, poses)
+            # outputs = model(images, heads)
+            outputs = model(images)
+
+            print("outputs.shape: ", outputs.shape)
+            print("outputs[0].shape: ", outputs[0].shape)
+            print("outputs[0]: ", outputs[0])
+
+            outputs = outputs.detach().cpu().numpy()
+            gazes = gazes.detach().cpu().numpy()
+            gestures = gestures.detach().cpu().numpy()
+
+            outputs_list.extend(outputs)
+            gazes_list.extend(gazes)
+            gestures_list.extend(gestures)
+
+    print(np.asarray(outputs_list).shape)
+    print(np.asarray(gazes_list).shape)
+    print(np.asarray(gestures_list).shape)
+
+    np.savez("0101_2019_regressor_output_list", outputs_list=outputs_list)
+    np.savez("0101_2019_regressor_gazes_list", gazes_list=gazes_list)
+    np.savez("0101_2019_regressor_gestures_list", gestures_list=gestures_list)
+
+    raise("debug")
+
+
 def test(epoch, model, criterion, test_loader, config, writer):
     logger.info('Test {}'.format(epoch))
+    save_to_record('Test {}'.format(epoch) + "\n")
+
+    logger.info(json.dumps(vars(args), indent=2))
 
     model.eval()
 
     loss_meter = AverageMeter()
     angle_error_meter = AverageMeter()
     start = time.time()
-    for step, (images, poses, gazes) in enumerate(test_loader):
 
-        # print ("images.shape: ", images.shape)
+# ////////////////////////////////////
+#     inference(test_loader, model)
+# ////////////////////////////////////
 
-        if config['tensorboard_images'] and epoch == 0 and step == 0:
-            image = torchvision.utils.make_grid(
-                images, normalize=True, scale_each=True)
-            writer.add_image('Test/Image', image, epoch)
+
+    # for step, (images, gazes) in enumerate(test_loader):
+    for step, (images, gazes, heads) in enumerate(test_loader):
+    # for step, (images, gazes, heads, faces) in enumerate(test_loader):
+
+    #     print("images.shape: ", images.shape)
+    #     print("gazes.shape: ", gazes.shape)
+        # print("heads.shape: ", heads.shape)
+
+        # if config['tensorboard_images'] and epoch == 0 and step == 0:
+        #     image = torchvision.utils.make_grid(
+        #         images, normalize=True, scale_each=True)
+        #     writer.add_image('Test/Image', image, epoch)
+
 
         images = images.cuda()
-        poses = poses.cuda()
         gazes = gazes.cuda()
+        heads = heads.cuda()
 
         with torch.no_grad():
-            outputs = model(images, poses)
-
-        for index in range(len(images)):
-            image = images[index]
-            cv2.imshow("image", image)
+            # outputs = model(images)
+            outputs = model(images, heads)
 
         loss = criterion(outputs, gazes)
 
@@ -257,56 +429,96 @@ def test(epoch, model, criterion, test_loader, config, writer):
     logger.info('Epoch {} Loss {:.4f} AngleError {:.2f}'.format(
         epoch, loss_meter.avg, angle_error_meter.avg))
 
+    save_to_record('Epoch {} Loss {:.4f} AngleError {:.2f}'.format(
+        epoch, loss_meter.avg, angle_error_meter.avg) + "\n")
+
+
     elapsed = time.time() - start
     logger.info('Elapsed {:.2f}'.format(elapsed))
+    save_to_record('Elapsed {:.2f}'.format(elapsed) + "\n")
 
-    if config['tensorboard']:
-        if epoch > 0:
-            writer.add_scalar('Test/Loss', loss_meter.avg, epoch)
-            writer.add_scalar('Test/AngleError', angle_error_meter.avg, epoch)
-        writer.add_scalar('Test/Time', elapsed, epoch)
-
-    if config['tensorboard_parameters']:
-        for name, param in model.named_parameters():
-            writer.add_histogram(name, param, global_step)
+    # if config['tensorboard']:
+    #     if epoch > 0:
+    #         writer.add_scalar('Test/Loss', loss_meter.avg, epoch)
+    #         writer.add_scalar('Test/AngleError', angle_error_meter.avg, epoch)
+    #     writer.add_scalar('Test/Time', elapsed, epoch)
+    #
+    # if config['tensorboard_parameters']:
+    #     for name, param in model.named_parameters():
+    #         writer.add_histogram(name, param, global_step)
 
     return angle_error_meter.avg
 
-def plot_gaze_pose(center_pt, gaze, pose, image):
+def plot_gaze_pose(center_pt, gaze, pose, image, counter):
 
-    [cx, cy] = center_pt
-    [left_yaw, left_pitch] = gaze
-    [head_yaw, head_pitch] = pose
     increase = 30
+    [cx, cy] = center_pt
 
-    # y_x, y_y = - np.sin(left_yaw), - np.sin(left_pitch)
-    y_x, y_y = - np.sin(head_yaw * np.pi/180), np.sin(head_pitch * np.pi/180)
-    # y_x, y_y = left_eye_vector_unit
-    print (image)
+    if pose:
+        [head_yaw, head_pitch] = pose
+        y_x, y_y = - np.sin(head_yaw * np.pi/180), np.sin(head_pitch * np.pi/180)
+    else:
+        [left_yaw, left_pitch] = gaze
+        y_x, y_y = - np.sin(left_yaw), - np.sin(left_pitch)
 
-    print ("cx, cy: ", cx, cy)
-    print ("y_x, y_y: ", y_x, y_y)
+    print("cx, cy: ", cx, cy)
+    print("y_x, y_y: ", y_x, y_y)
 
     y_x, y_y = int(y_x * increase), -int(y_y * increase)
-    # print (px, py)
 
-    print (image.shape)
+    print(image.shape)
     cv2.imwrite('test.png', image)
     image = cv2.imread('test.png')
-    print (image.shape)
+    print(image.shape)
 
     cv2.circle(image, (int(cx), int(cy)), 5, (0, 0, 255), -1)
     cv2.line(image, (int(cx), int(cy)), (int(cx + y_x), int(cy + y_y)), (255, 0, 0), 3)
 
-    cv2.imshow("eye", image)
-    # cv2.imshow("right_eye", right_eye)
-    # cv2.imshow("left_eye", left_eye)
-    cv2.waitKey(0)
+    cv2.imwrite(str(counter) + '.png', image)
+    # cv2.imshow("eye", image)
+    # cv2.waitKey(0)
     # raise "debug"
 
+def inspect_input(train_loader):
+# inspect input ///////////////////////////////////////////
+#     for step, (images, poses, gazes) in enumerate(train_loader):
+    for step, (images, gazes) in enumerate(train_loader):
+    # for step, (images, gazes, onehot_gt) in enumerate(train_loader):
+
+        print ("images.shape: ", images.shape)
+        for index in range(len(images)):
+
+            image = np.asarray(images[index]).astype(np.uint8).copy()
+
+            gaze = np.asarray(gazes[index])
+            # pose = np.asarray(poses[index])
+            # gt = np.asarray(onehot_gt[index])
+
+            image = image.transpose(1, 2, 0)
+
+            height, width, channels = image.shape
+            cy, cx = height/2, width/2
+
+            print(image.shape)
+            print(type(image))
+
+            print("gaze: ", gaze)
+            # print("pose: ", pose)
+            # print("onehot_gt: ", gt)
+            print("index: ", index)
+
+            # cv2.imshow("image", image)
+            # cv2.waitKey(0)
+
+            # plot_gaze_pose([cx, cy], gaze, pose, image, index)
+            # plot_gaze_pose([cx, cy], gaze, None, image, index, gt)
+            plot_gaze_pose([cx, cy], gaze, None, image, index)
+
+        raise ("debug")
+
 def main():
-    args = parse_args()
     logger.info(json.dumps(vars(args), indent=2))
+    save_to_record(str(json.dumps(vars(args))) + "\n")
 
     # TensorBoard SummaryWriter
     writer = SummaryWriter() if args.tensorboard else None
@@ -328,36 +540,11 @@ def main():
 
     # data loaders
     train_loader, test_loader = get_loader(
-        args.dataset, args.test_id, args.batch_size, args.num_workers, True)
-    #
-    # for step, (images, poses, gazes) in enumerate(train_loader):
-    #     print ("images.shape: ", images.shape)
-    #     for index in range(len(images)):
-    #
-    #         image = np.asarray(images[index]).astype(np.uint8).copy()
-    #
-    #         # image = np.ascontiguousarray(image, dtype = np.uint8)
-    #         # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #         gaze = np.asarray(gazes[index])
-    #         pose = np.asarray(poses[index])
-    #
-    #         image = image.transpose(1, 2, 0)
-    #
-    #         height, width, channels = image.shape
-    #         cy, cx = height/2, width/2
-    #
-    #         print image.shape
-    #         print type(image)
-    #
-    #         print "gaze: ", gaze
-    #         print "pose: ", pose
-    #
-    #         # cv2.imshow("image", image)
-    #         # cv2.waitKey(0)
-    #
-    #         plot_gaze_pose([cx, cy], gaze, pose, image)
-    #
-    #     raise ("debug")
+        args.dataset, args.test_id, args.batch_size, args.num_workers, True, False)
+
+    # ///////////////////////////////////////////
+    # inspect_input(train_loader)
+    # ///////////////////////////////////////////
 
     # model
     module = importlib.import_module('models.{}'.format(args.arch))
@@ -366,6 +553,8 @@ def main():
     # weights = "models/resnet10_weights.npy"
     # print "loading: ", weights
     # model = module.Model(weights)
+
+    # model = torch.nn.DataParallel(model)
 
     model.cuda()
 
@@ -381,19 +570,33 @@ def main():
         nesterov=args.nesterov)
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(
     #     optimizer, milestones=args.milestones, gamma=args.lr_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 20, gamma=0.1, last_epoch=-1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=args.lr_decay, last_epoch=-1)
 
     config = {
         'tensorboard': args.tensorboard,
         'tensorboard_images': args.tensorboard_images,
         'tensorboard_parameters': args.tensorboard_parameters,
     }
+    #
+    # args.pretrained_path = "results/2018-12-21-07-07_second_test_data_resnet34_pretrained_0.01_relu_l2_4_camera_batch64_no_shuffle/model_state_100.pth"
+    #
+    # if args.pretrained_path != "":
+    #     state_dict = torch.load(args.pretrained_path)['state_dict']
+    #     model.load_state_dict(state_dict)
+    #
+    #     print ("args.pretrained_path: ", args.pretrained_path)
+    #     # raise ("debug")
 
     # run test before start training
     test(0, model, criterion, test_loader, config, writer)
 
+
     for epoch in range(1, args.epochs + 1):
         scheduler.step()
+
+        lr = scheduler.get_lr()
+        print("current learnin rate: ", str(lr))
+        save_to_record("current learnin rate: " + str(lr))
 
         train(epoch, model, optimizer, criterion, train_loader, config, writer)
         angle_error = test(epoch, model, criterion, test_loader, config,
@@ -406,13 +609,16 @@ def main():
             ('epoch', epoch),
             ('angle_error', angle_error),
         ])
-        model_path = os.path.join(outdir, 'model_state.pth')
-        torch.save(state, model_path)
+
+        if epoch % 50 == 0:
+            model_path = os.path.join(outdir, 'model_state_' + str(epoch) + '.pth')
+            # torch.save(model.state_dict(), model_path)
+            torch.save(state, model_path)
 
     if args.tensorboard:
         outpath = os.path.join(outdir, 'all_scalars.json')
         writer.export_scalars_to_json(outpath)
 
-
 if __name__ == '__main__':
     main()
+

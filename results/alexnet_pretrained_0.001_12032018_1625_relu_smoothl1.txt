@@ -1,0 +1,145 @@
+[2018/12/03 08:25:44 __main__ INFO] - {
+  "base_lr": 0.001, 
+  "weight_decay": 0.0001, 
+  "num_workers": 7, 
+  "nesterov": true, 
+  "batch_size": 10, 
+  "dataset": "./", 
+  "epochs": 1000, 
+  "tensorboard_parameters": false, 
+  "seed": 17, 
+  "tensorboard_images": false, 
+  "tensorboard": false, 
+  "milestones": [
+    20, 
+    30
+  ], 
+  "test_id": 0, 
+  "arch": "alexnet", 
+  "lr_decay": 0.1, 
+  "momentum": 0.9, 
+  "outdir": "results/alexnet_test_data"
+}
+---------------------------------------
+loading:  ./train_A.npz
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------
+loading:  ./test_A.npz
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python2.7/dist-packages/torch/nn/functional.py:52: UserWarning: size_average and reduce args will be deprecated, please use reduction='elementwise_mean' instead.
+  warnings.warn(warning.format(ret))
+[2018/12/03 08:25:57 __main__ INFO] - Test 0
+[2018/12/03 08:25:59 __main__ INFO] - Epoch 0 Loss 25.5145 AngleError 1490.52
+[2018/12/03 08:25:59 __main__ INFO] - Elapsed 1.81
+[2018/12/03 08:25:59 __main__ INFO] - Train 1
+[2018/12/03 08:26:00 __main__ INFO] - Epoch 1 Step 0/160 Loss 16.2351 (16.2351) AngleError 958.85 (958.85)
+[2018/12/03 08:26:00 __main__ INFO] - Epoch 1 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:00 __main__ INFO] - Epoch 1 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:00 __main__ INFO] - Epoch 1 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:01 __main__ INFO] - Epoch 1 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:01 __main__ INFO] - Epoch 1 Step 50/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:01 __main__ INFO] - Epoch 1 Step 60/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:01 __main__ INFO] - Epoch 1 Step 70/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:01 __main__ INFO] - Epoch 1 Step 80/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:02 __main__ INFO] - Epoch 1 Step 90/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:02 __main__ INFO] - Epoch 1 Step 100/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:02 __main__ INFO] - Epoch 1 Step 110/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:02 __main__ INFO] - Epoch 1 Step 120/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:03 __main__ INFO] - Epoch 1 Step 130/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:03 __main__ INFO] - Epoch 1 Step 140/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:03 __main__ INFO] - Epoch 1 Step 150/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:03 __main__ INFO] - Elapsed 4.56
+[2018/12/03 08:26:03 __main__ INFO] - Test 1
+[2018/12/03 08:26:05 __main__ INFO] - Epoch 1 Loss nan AngleError nan
+[2018/12/03 08:26:05 __main__ INFO] - Elapsed 1.81
+[2018/12/03 08:26:07 __main__ INFO] - Train 2
+[2018/12/03 08:26:07 __main__ INFO] - Epoch 2 Step 0/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:08 __main__ INFO] - Epoch 2 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:08 __main__ INFO] - Epoch 2 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:08 __main__ INFO] - Epoch 2 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:08 __main__ INFO] - Epoch 2 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:09 __main__ INFO] - Epoch 2 Step 50/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:09 __main__ INFO] - Epoch 2 Step 60/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:09 __main__ INFO] - Epoch 2 Step 70/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:09 __main__ INFO] - Epoch 2 Step 80/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:09 __main__ INFO] - Epoch 2 Step 90/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:10 __main__ INFO] - Epoch 2 Step 100/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:10 __main__ INFO] - Epoch 2 Step 110/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:10 __main__ INFO] - Epoch 2 Step 120/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:10 __main__ INFO] - Epoch 2 Step 130/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:10 __main__ INFO] - Epoch 2 Step 140/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:11 __main__ INFO] - Epoch 2 Step 150/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:11 __main__ INFO] - Elapsed 4.09
+[2018/12/03 08:26:11 __main__ INFO] - Test 2
+[2018/12/03 08:26:13 __main__ INFO] - Epoch 2 Loss nan AngleError nan
+[2018/12/03 08:26:13 __main__ INFO] - Elapsed 2.03
+[2018/12/03 08:26:14 __main__ INFO] - Train 3
+[2018/12/03 08:26:15 __main__ INFO] - Epoch 3 Step 0/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:15 __main__ INFO] - Epoch 3 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:16 __main__ INFO] - Epoch 3 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:16 __main__ INFO] - Epoch 3 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:16 __main__ INFO] - Epoch 3 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:16 __main__ INFO] - Epoch 3 Step 50/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:16 __main__ INFO] - Epoch 3 Step 60/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:17 __main__ INFO] - Epoch 3 Step 70/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:17 __main__ INFO] - Epoch 3 Step 80/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:17 __main__ INFO] - Epoch 3 Step 90/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:17 __main__ INFO] - Epoch 3 Step 100/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:18 __main__ INFO] - Epoch 3 Step 110/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:18 __main__ INFO] - Epoch 3 Step 120/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:18 __main__ INFO] - Epoch 3 Step 130/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:18 __main__ INFO] - Epoch 3 Step 140/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:18 __main__ INFO] - Epoch 3 Step 150/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:19 __main__ INFO] - Elapsed 4.31
+[2018/12/03 08:26:19 __main__ INFO] - Test 3
+[2018/12/03 08:26:20 __main__ INFO] - Epoch 3 Loss nan AngleError nan
+[2018/12/03 08:26:20 __main__ INFO] - Elapsed 1.74
+[2018/12/03 08:26:22 __main__ INFO] - Train 4
+[2018/12/03 08:26:23 __main__ INFO] - Epoch 4 Step 0/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:23 __main__ INFO] - Epoch 4 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:23 __main__ INFO] - Epoch 4 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:23 __main__ INFO] - Epoch 4 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:24 __main__ INFO] - Epoch 4 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:24 __main__ INFO] - Epoch 4 Step 50/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:24 __main__ INFO] - Epoch 4 Step 60/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:24 __main__ INFO] - Epoch 4 Step 70/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:24 __main__ INFO] - Epoch 4 Step 80/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:25 __main__ INFO] - Epoch 4 Step 90/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:25 __main__ INFO] - Epoch 4 Step 100/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:25 __main__ INFO] - Epoch 4 Step 110/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:25 __main__ INFO] - Epoch 4 Step 120/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:25 __main__ INFO] - Epoch 4 Step 130/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:26 __main__ INFO] - Epoch 4 Step 140/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:26 __main__ INFO] - Epoch 4 Step 150/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:26 __main__ INFO] - Elapsed 4.05
+[2018/12/03 08:26:26 __main__ INFO] - Test 4
+[2018/12/03 08:26:28 __main__ INFO] - Epoch 4 Loss nan AngleError nan
+[2018/12/03 08:26:28 __main__ INFO] - Elapsed 1.79
+[2018/12/03 08:26:29 __main__ INFO] - Train 5
+[2018/12/03 08:26:30 __main__ INFO] - Epoch 5 Step 0/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:31 __main__ INFO] - Epoch 5 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:31 __main__ INFO] - Epoch 5 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:31 __main__ INFO] - Epoch 5 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:31 __main__ INFO] - Epoch 5 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:31 __main__ INFO] - Epoch 5 Step 50/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:32 __main__ INFO] - Epoch 5 Step 60/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:32 __main__ INFO] - Epoch 5 Step 70/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:32 __main__ INFO] - Epoch 5 Step 80/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:32 __main__ INFO] - Epoch 5 Step 90/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:32 __main__ INFO] - Epoch 5 Step 100/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:33 __main__ INFO] - Epoch 5 Step 110/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:33 __main__ INFO] - Epoch 5 Step 120/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:33 __main__ INFO] - Epoch 5 Step 130/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:33 __main__ INFO] - Epoch 5 Step 140/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:33 __main__ INFO] - Epoch 5 Step 150/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:34 __main__ INFO] - Elapsed 4.31
+[2018/12/03 08:26:34 __main__ INFO] - Test 5
+[2018/12/03 08:26:35 __main__ INFO] - Epoch 5 Loss nan AngleError nan
+[2018/12/03 08:26:35 __main__ INFO] - Elapsed 1.77
+[2018/12/03 08:26:37 __main__ INFO] - Train 6
+[2018/12/03 08:26:38 __main__ INFO] - Epoch 6 Step 0/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:38 __main__ INFO] - Epoch 6 Step 10/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:38 __main__ INFO] - Epoch 6 Step 20/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:38 __main__ INFO] - Epoch 6 Step 30/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:39 __main__ INFO] - Epoch 6 Step 40/160 Loss nan (nan) AngleError nan (nan)
+[2018/12/03 08:26:39 __main__ INFO] - Epoch 6 Step 50/160 Loss nan (nan) AngleError nan (nan)

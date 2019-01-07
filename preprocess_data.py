@@ -156,7 +156,6 @@ def get_subject_data(subject_id, datadir, evaldir):
 			# print ("gaze: ", gaze)
 
 # ----------------------------------------------------------------
-#
 # 			h, w, _= rgb_img.shape
 # 			increase = 5
 # 			rgb_img = cv2.resize(rgb_img, (h * increase, w * increase))

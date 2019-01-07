@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-
+from collections import OrderedDict
 
 __all__ = ['resnet18']
 
@@ -113,14 +113,13 @@ class Model(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
-        self.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
+        # self.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
 
-        self.fc1 = nn.Linear(num_classes + 2, 2)
-        # self.fc1 = nn.Linear(num_classes, 2)
+        self.bn_1d = nn.BatchNorm1d(num_classes)
 
-        # self.fc1 = nn.Linear(num_classes + 2, 500)
-        # self.fc2 = nn.Linear(500, 100)
-        # self.fc3 = nn.Linear(100, 2)
+        # self.fc1 = nn.Linear(num_classes + 2, 2)
+        self.fc1 = nn.Linear(num_classes, 2)
+
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -145,7 +144,8 @@ class Model(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, y):
+    # def forward(self, x, y):
+    def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -157,16 +157,17 @@ class Model(nn.Module):
         x = self.layer4(x)
 
         x = self.avgpool(x)
+
         x = x.view(x.size(0), -1)
 
         x = self.fc(x)
-        x = torch.cat([x, y], dim=1)
 
+        x = self.bn_1d(x)
         x = self.relu(x)
+
+        # x = torch.cat([x, y], dim=1)
         x = self.fc1(x)
 
-        # x = self.fc2(x)
-        # x = self.fc3(x)
         return x
 
 
@@ -181,3 +182,7 @@ def resnet18(pretrained=False, **kwargs):
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
     return model
+
+
+if __name__ == '__main__':
+    model1 = Model()
